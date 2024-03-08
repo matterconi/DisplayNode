@@ -43,7 +43,7 @@ const BinaryTreeNode = ({ node, search }) => {
 const TreeVisualization = ({ tree, search, activeTreeModel }) => {
   return (
     <div>
-      <h1 className='text-center text-xl font-bold mb-16'>{activeTreeModel ? activeTreeModel.title : "Select a Tree"} </h1>
+      <h1 className='text-center text-xl font-bold mb-8 lg:mb-16'>{activeTreeModel ? activeTreeModel.title : "Select a Tree"} </h1>
       {activeTreeModel && <BinaryTreeNode node={tree.root} search={search} activeTreeModel={activeTreeModel}/>}
     </div>
   );

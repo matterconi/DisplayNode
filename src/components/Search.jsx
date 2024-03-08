@@ -10,7 +10,7 @@ const Search = ({ onSearch }) => {
     };
 
     return (
-        <div className="flex flex-col justify-center items-center m-8 mt-16">
+        <div className="flex flex-col justify-center items-center m-8 mt-8 lg:mt-16">
             <input
                 type="text"
                 placeholder="Search for a node..."
@@ -20,7 +20,7 @@ const Search = ({ onSearch }) => {
             />
             <button
                 onClick={handleSearch}
-                className="bg-navyBlue text-white px-4 py-2 my-16 rounded hover:bg-blue-700 transition duration-300"
+                className="bg-navyBlue text-white px-4 py-2 my-8 lg rounded hover:bg-blue-700 transition duration-300"
             >
                 Search
             </button>
