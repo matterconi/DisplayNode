@@ -14,13 +14,13 @@ const Search = ({ onSearch }) => {
             <input
                 type="text"
                 placeholder="Search for a node..."
-                className="search-input"
+                className="custom-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
                 onClick={handleSearch}
-                className="search-button mt-8"
+                className="bg-navyBlue text-white px-4 py-2 my-16 rounded hover:bg-blue-700 transition duration-300"
             >
                 Search
             </button>

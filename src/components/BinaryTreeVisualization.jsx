@@ -1,9 +1,10 @@
 
 import PropTypes from 'prop-types';
 
-const TreeNode = ({ node, search = ""}) => {
-  if (!node) return null;
-
+const BinaryTreeNode = ({ node, search }) => {
+  
+  if(!node) return null
+  if(!node) return null
   let isSearchMatch = false;
 
   if (search || search === 0) {
@@ -25,13 +26,13 @@ const TreeNode = ({ node, search = ""}) => {
         {/* Render left child or an invisible placeholder if it's an only child for alignment */}
         {node.left ? (
           <div className={`${!node.right ? 'flex-1' : ''}`}>
-            <TreeNode node={node.left} search={search} />
+            <BinaryTreeNode node={node.left} search={search} />
           </div>
         ) : hasOnlyOneChild ? <div className="w-12"></div> : null}
         {/* Render right child or an invisible placeholder if it's an only child for alignment */}
         {node.right ? (
           <div className={`${!node.left ? 'flex-1' : ''}`}>
-            <TreeNode node={node.right} search={search} />
+            <BinaryTreeNode node={node.right} search={search} />
           </div>
         ) : hasOnlyOneChild ? <div className="w-12"></div> : null}
       </div>
@@ -39,26 +40,26 @@ const TreeNode = ({ node, search = ""}) => {
   );
 };
 
-
-
-
-const BinaryTreeVisualization = ({ tree, search }) => {
+const TreeVisualization = ({ tree, search, activeTreeModel }) => {
   return (
     <div>
-      <h1 className='text-center text-xl font-bold mb-16'>Waving Binary Tree</h1>
-      {tree && <TreeNode node={tree.root} search={search} key={tree.version}/>}
+      <h1 className='text-center text-xl font-bold mb-16'>{activeTreeModel ? activeTreeModel.title : "Select a Tree"} </h1>
+      {activeTreeModel && <BinaryTreeNode node={tree.root} search={search} activeTreeModel={activeTreeModel}/>}
     </div>
   );
 };
 
-BinaryTreeVisualization.propTypes = {
+TreeVisualization.propTypes = {
    tree: PropTypes.object,
    search: PropTypes.string,
+   activeTreeModel: PropTypes.object,
 };
-TreeNode.propTypes = {
+
+BinaryTreeNode.propTypes = {
   node: PropTypes.object,
   search: PropTypes.string,
+  activeTreeModel: PropTypes.object,
 };
 
 
-export default BinaryTreeVisualization;
+export default TreeVisualization;
