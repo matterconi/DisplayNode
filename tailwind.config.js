@@ -17,6 +17,7 @@ export default {
       },
       animation: {
         wave: 'waveAnimation 2.5s ease-in-out infinite',
+        dynamicWave: 'waveAnimation 2.5s ease-in-out infinite',
       },
     },
   },

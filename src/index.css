@@ -15,6 +15,26 @@
   }
 }
 
+@keyframes dynamicWaveAnimation {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-2px, -2px) scale(1.05);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(2px, -4px) scale(1.1);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translate(-2px, -2px) scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+
 .search-input {
   @apply bg-white text-gray-800 border border-gray-300 rounded-lg p-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition duration-300;
 }

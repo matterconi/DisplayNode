@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tree, generateRandomTree } from './utils';
+import { treeFactory } from './utils';
 
 import Navbar from './components/Navbar';
 import TreeInputForm from './components/TreeInputForm';
@@ -11,13 +11,13 @@ const App = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [nodes, setNodes] = useState([]);
-  const [tree, setTree] = useState(new Tree());
+  const [tree, setTree] = useState(null); // Changed Tree to BinaryTree
   const [activeTreeModel, setActiveTreeModel] = useState(null);
 
   const handleTreeModelChange = (model) => {
     setActiveTreeModel(model);
     setNodes([]); // Reset nodes state
-    setTree(new Tree()); // Reset tree state
+    setTree(model ? treeFactory(model.value) : null); // Reset tree state
   };
 
   const onSearch = (searchQuery) => {
@@ -26,52 +26,67 @@ const App = () => {
 
   const onRandom = () => {
     if(!activeTreeModel) return null;
-    console.log(activeTreeModel);
-    const randomNodes = [];
-    for (let i = 0; i < 20; i++) {
-      const randomNumber = Math.floor(Math.random() * 100);
-      if(!randomNodes.includes(randomNumber)){
-        randomNodes.push(randomNumber);
-      }
-    }
-    setNodes(randomNodes); // Update nodes state
-
-    // Use `randomNodes` directly to generate the new tree
-    const randomTree = generateRandomTree(randomNodes);
+    const [randomTree, randomNodes] = tree.generateRandomTree();
     
-    setTree(randomTree); // Update tree state
+    setNodes(randomNodes); // Update nodes state
+    // Use `randomNodes` directly to generate the new tree
+    setTree(randomTree); // Update tree state, changed Tree to BinaryTree
     setSearchQuery(''); // Reset search query
-};
+  };
 
-const onAddNode = (nodeValue) => {
-  if(!activeTreeModel) return null;
-  // Check if nodeValue is not a number, is empty, or is undefined before proceeding.
-  // Additionally, check to ensure it doesn't default to 0 in case of an empty submission.
-  if (isNaN(nodeValue) || nodeValue === '' || nodeValue === undefined) return;
-  // Prevent adding a node if the value already exists in the nodes array
-  if (nodes.includes(nodeValue)) return;
+  const onAddNode = (nodeValue) => {
+    if (!activeTreeModel) return null;
 
-  const newTree = tree.clone(); // Clone the existing tree to create a new instance
-  newTree.addNode(nodeValue); // Add the new node to the tree
-  
-  setNodes([...nodes, nodeValue]); // Update the nodes array state
-  setTree(newTree); // Update the tree state with the new tree instance
-  setSearchQuery(''); // Optionally reset the search query if needed
-};
+    // When activeTreeModel is 'binary', ensure input is a number
+    if (activeTreeModel.value === 'binary') {
+        // Parse the nodeValue as a float to accommodate both integers and floating-point numbers
+        const parsedValue = parseFloat(nodeValue);
+        // Check if the value is a number and not already included in the nodes
+        if (!isNaN(parsedValue) && !nodes.includes(parsedValue)) {
+            const newTree = tree.clone(); // Clone the existing tree to create a new instance
+            newTree.addNode(parsedValue); // Add the new node to the tree
 
+            setNodes([...nodes, parsedValue]); // Update the nodes array state
+            setTree(newTree); // Update the tree state
+            setSearchQuery(''); // Optionally reset the search query if needed
+        } else {
+            console.error('Invalid or duplicate numeric value:', nodeValue);
+        }
+    }
+    // When activeTreeModel is 'merkle', accept any string except duplicates
+    else if (activeTreeModel.value === 'merkle') {
+        if (typeof nodeValue === 'string' && nodeValue.trim() !== '' && !nodes.includes(nodeValue)) {
+            const newTree = tree.clone(); // Clone the existing tree to create a new instance
+            newTree.addNode(nodeValue.trim()); // Add the new node to the tree
+
+            setNodes([...nodes, nodeValue.trim()]); // Update the nodes array state
+            setTree(newTree); // Update the tree state
+            setSearchQuery(''); // Optionally reset the search query if needed
+            console.log(newTree)
+        } else {
+            console.error('Invalid or duplicate string value:', nodeValue);
+        }
+    }
+  };
+
+
+  const onClearNodes = () => {
+    setNodes([]); // Reset nodes state
+    setTree(activeTreeModel ? treeFactory(activeTreeModel.value) : null); // Reset tree state, changed Tree to BinaryTree
+    setSearchQuery(''); // Reset search query
+  };
 
   return (
     <div className='flex flex-col justify-between min-h-screen font-code'>
       <div>
         <Navbar onTreeModelChange={handleTreeModelChange} />
-        <TreeInputForm onAddNodes={onAddNode} onRandom={onRandom} nodes={nodes} activeTreeModel={activeTreeModel}/>
+        <TreeInputForm onAddNodes={onAddNode} onRandom={onRandom} nodes={nodes} activeTreeModel={activeTreeModel} onClearNodes={onClearNodes}/>
         <TreeVisualization tree={tree} search={searchQuery} activeTreeModel={activeTreeModel}/>
         <Search onSearch={onSearch}/>
       </div>
       <Footer />
     </div>
   );
-  
 }
 
 export default App;
