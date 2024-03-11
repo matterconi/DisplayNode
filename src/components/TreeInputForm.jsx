@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 
-const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, nodes, activeTreeModel }) => {
+const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes, activeTreeModel, onSearch }) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = (e) => {
@@ -25,6 +25,15 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, nodes, activeTreeMo
             setInputValue(''); // Reset the input field
         } else {
             console.error('Invalid or empty value for merkle tree:', inputValue);
+        }
+    }
+    // Handle patricia tree case: accept any non-empty string, similar to merkle tree
+    else if (activeTreeModel.value === 'patricia') {
+        if (trimmedInputValue !== '') {
+            onAddNodes(trimmedInputValue); // Here, nodeValue is also a string
+            setInputValue(''); // Reset the input field
+        } else {
+            console.error('Invalid or empty value for patricia tree:', inputValue);
         }
     }
   };
@@ -83,6 +92,21 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, nodes, activeTreeMo
           >
             Clear All Nodes
           </button>
+
+          <button
+            type="button"
+            onClick={() => onGetProof(inputValue)} // Trigger onGetProof with the current input value
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300"
+          >
+            Get Proof
+          </button>
+          <button
+            type="button"
+            onClick={() => onSearch(inputValue)} // Trigger onGetProof with the current input value
+            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300"
+          >
+            Search
+          </button>
         </div>
       </form>
     </div>
@@ -98,6 +122,8 @@ TreeInputForm.propTypes = {
     PropTypes.string,
     PropTypes.object
   ]),
+  onGetProof: PropTypes.func.isRequired,
+  onSearch: PropTypes.func.isRequired,
 };
 
 export default TreeInputForm;

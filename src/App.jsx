@@ -4,7 +4,6 @@ import { treeFactory } from './utils';
 import Navbar from './components/Navbar';
 import TreeInputForm from './components/TreeInputForm';
 import TreeVisualization from './components/BinaryTreeVisualization';
-import Search from './components/Search';
 import Footer from './components/Footer';
 
 const App = () => {
@@ -13,6 +12,7 @@ const App = () => {
   const [nodes, setNodes] = useState([]);
   const [tree, setTree] = useState(null); // Changed Tree to BinaryTree
   const [activeTreeModel, setActiveTreeModel] = useState(null);
+  const [proof, setProof] = useState([]);
 
   const handleTreeModelChange = (model) => {
     setActiveTreeModel(model);
@@ -21,11 +21,13 @@ const App = () => {
   };
 
   const onSearch = (searchQuery) => {
+    setProof([]);
     setSearchQuery(searchQuery);
   };
 
   const onRandom = () => {
     if(!activeTreeModel) return null;
+    setNodes([]); // Reset nodes state
     const [randomTree, randomNodes] = tree.generateRandomTree();
     
     setNodes(randomNodes); // Update nodes state
@@ -37,37 +39,48 @@ const App = () => {
   const onAddNode = (nodeValue) => {
     if (!activeTreeModel) return null;
 
-    // When activeTreeModel is 'binary', ensure input is a number
+    // Handle binary tree case
     if (activeTreeModel.value === 'binary') {
-        // Parse the nodeValue as a float to accommodate both integers and floating-point numbers
         const parsedValue = parseFloat(nodeValue);
-        // Check if the value is a number and not already included in the nodes
         if (!isNaN(parsedValue) && !nodes.includes(parsedValue)) {
-            const newTree = tree.clone(); // Clone the existing tree to create a new instance
-            newTree.addNode(parsedValue); // Add the new node to the tree
+            const newTree = tree.clone();
+            newTree.addNode(parsedValue);
 
-            setNodes([...nodes, parsedValue]); // Update the nodes array state
-            setTree(newTree); // Update the tree state
-            setSearchQuery(''); // Optionally reset the search query if needed
+            setNodes([...nodes, parsedValue]);
+            setTree(newTree);
+            setSearchQuery('');
         } else {
             console.error('Invalid or duplicate numeric value:', nodeValue);
         }
     }
-    // When activeTreeModel is 'merkle', accept any string except duplicates
+    // Handle Merkle tree case
     else if (activeTreeModel.value === 'merkle') {
         if (typeof nodeValue === 'string' && nodeValue.trim() !== '' && !nodes.includes(nodeValue)) {
-            const newTree = tree.clone(); // Clone the existing tree to create a new instance
-            newTree.addNode(nodeValue.trim()); // Add the new node to the tree
+            const newTree = tree.clone();
+            newTree.addNode(nodeValue.trim());
 
-            setNodes([...nodes, nodeValue.trim()]); // Update the nodes array state
-            setTree(newTree); // Update the tree state
-            setSearchQuery(''); // Optionally reset the search query if needed
-            console.log(newTree)
+            setNodes([...nodes, nodeValue.trim()]);
+            setTree(newTree);
+            setSearchQuery('');
         } else {
             console.error('Invalid or duplicate string value:', nodeValue);
         }
     }
-  };
+    // Handle Patricia tree case
+    else if (activeTreeModel.value === 'patricia') {
+        // Patricia trees typically use strings, similar to Merkle trees in this context
+        if (typeof nodeValue === 'string' && nodeValue.trim() !== '') {
+            const newTree = tree.clone(); // Assuming clone method is available and properly implemented
+            newTree.insert(nodeValue.trim()); // Assuming addNode is adjusted to work for Patricia trees
+
+            setNodes([...nodes, nodeValue.trim()]);
+            setTree(newTree);
+            setSearchQuery('');
+        } else {
+            console.error('Invalid or duplicate string value for Patricia tree:', nodeValue);
+        }
+    }
+};
 
 
   const onClearNodes = () => {
@@ -76,13 +89,21 @@ const App = () => {
     setSearchQuery(''); // Reset search query
   };
 
+  const onGetProof = (nodeValue) => {
+    if (!activeTreeModel) return null;
+    if (activeTreeModel.value === 'merkle') {
+          const proof = tree.getProof(nodeValue);
+          setProof(proof);
+          setSearchQuery("");
+    }
+};
+
   return (
     <div className='flex flex-col justify-between min-h-screen font-code'>
       <div>
         <Navbar onTreeModelChange={handleTreeModelChange} />
-        <TreeInputForm onAddNodes={onAddNode} onRandom={onRandom} nodes={nodes} activeTreeModel={activeTreeModel} onClearNodes={onClearNodes}/>
-        <TreeVisualization tree={tree} search={searchQuery} activeTreeModel={activeTreeModel}/>
-        <Search onSearch={onSearch}/>
+        <TreeInputForm onAddNodes={onAddNode} onRandom={onRandom} nodes={nodes} activeTreeModel={activeTreeModel} onClearNodes={onClearNodes} onGetProof={onGetProof} onSearch={onSearch}/>
+        <TreeVisualization tree={tree} search={searchQuery} activeTreeModel={activeTreeModel} proof={proof}/>
       </div>
       <Footer />
     </div>
