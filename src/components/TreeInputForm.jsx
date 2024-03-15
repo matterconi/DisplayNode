@@ -104,7 +104,7 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes,
           >
             Clear All Nodes
           </button>
-          {activeTreeModel.value === 'merkle' && <button
+          {activeTreeModel?.value === 'merkle' && <button
             type="button"
             onClick={resetInputAndExecute(() => onGetProof(inputValue))}
             className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300"
