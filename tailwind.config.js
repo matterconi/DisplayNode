@@ -16,8 +16,8 @@ export default {
         'game': ['"Press Start 2P"', 'cursive'], // Adds a fun, retro gaming feel
       },
       animation: {
-        wave: 'waveAnimation 2.5s ease-in-out infinite',
-        dynamicWave: 'waveAnimation 2.5s ease-in-out infinite',
+        wave: 'waveAnimation var(--animation-speed) ease-in-out infinite',
+        dynamicWave: 'dynamicWaveAnimation var(--animation-speed) ease-in-out infinite',
       },
     },
   },

@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import TreeInputForm from './components/TreeInputForm';
 import TreeVisualization from './components/BinaryTreeVisualization';
 import Footer from './components/Footer';
+import TreeSettings from './components/TreeSettings';
 
 const App = () => {
 
@@ -13,6 +14,12 @@ const App = () => {
   const [tree, setTree] = useState(null); // Changed Tree to BinaryTree
   const [activeTreeModel, setActiveTreeModel] = useState(null);
   const [proof, setProof] = useState([]);
+  const [isAnimationActive, setIsAnimationActive] = useState(false);
+  const [settings, setSettings] = useState({
+    maxNodes: 10,
+    patriciaPrefix: '',
+    animationSpeed: 1,
+  });
 
   const handleTreeModelChange = (model) => {
     setActiveTreeModel(model);
@@ -20,16 +27,18 @@ const App = () => {
     setTree(model ? treeFactory(model.value) : null); // Reset tree state
   };
 
+  const onUpdateSettings = (newSettings) => setSettings(newSettings);
+
   const onSearch = (searchQuery) => {
     setProof([]);
     setSearchQuery(searchQuery);
   };
 
   const onRandom = () => {
+    console.log(settings.maxNodes)
     if(!activeTreeModel) return null;
     setNodes([]); // Reset nodes state
-    const [randomTree, randomNodes] = tree.generateRandomTree();
-    
+    const [randomTree, randomNodes] = activeTreeModel?.value === "patricia" ? tree.generateRandomTree(settings.maxNodes, settings.patriciaPrefix) : tree.generateRandomTree(settings.maxNodes);
     setNodes(randomNodes); // Update nodes state
     // Use `randomNodes` directly to generate the new tree
     setTree(randomTree); // Update tree state, changed Tree to BinaryTree
@@ -38,7 +47,7 @@ const App = () => {
 
   const onAddNode = (nodeValue) => {
     if (!activeTreeModel) return null;
-
+    if (nodes.length >= settings.maxNodes) return null;
     // Handle binary tree case
     if (activeTreeModel.value === 'binary') {
         const parsedValue = parseFloat(nodeValue);
@@ -70,10 +79,10 @@ const App = () => {
     else if (activeTreeModel.value === 'patricia') {
         // Patricia trees typically use strings, similar to Merkle trees in this context
         if (typeof nodeValue === 'string' && nodeValue.trim() !== '') {
-            const newTree = tree.clone(); // Assuming clone method is available and properly implemented
+            const newTree = tree.clone(settings.patriciaPrefix); // Assuming clone method is available and properly implemented
             newTree.insert(nodeValue.trim()); // Assuming addNode is adjusted to work for Patricia trees
-
-            setNodes([...nodes, nodeValue.trim()]);
+            nodeValue = nodeValue.trim().startsWith(settings.patriciaPrefix) ? nodeValue.trim() : settings.patriciaPrefix + nodeValue.trim();
+            nodes.includes(nodeValue) ? null : setNodes([...nodes, nodeValue]);
             setTree(newTree);
             setSearchQuery('');
         } else {
@@ -98,12 +107,22 @@ const App = () => {
     }
 };
 
+const toggleAnimation = () => {
+  setIsAnimationActive(!isAnimationActive);
+}
+
   return (
     <div className='flex flex-col justify-between min-h-screen font-code'>
       <div>
         <Navbar onTreeModelChange={handleTreeModelChange} />
-        <TreeInputForm onAddNodes={onAddNode} onRandom={onRandom} nodes={nodes} activeTreeModel={activeTreeModel} onClearNodes={onClearNodes} onGetProof={onGetProof} onSearch={onSearch}/>
-        <TreeVisualization tree={tree} search={searchQuery} activeTreeModel={activeTreeModel} proof={proof}/>
+        <TreeInputForm 
+          onAddNodes={onAddNode} onRandom={onRandom} nodes={nodes}
+          activeTreeModel={activeTreeModel} onClearNodes={onClearNodes}
+          onGetProof={onGetProof} onSearch={onSearch} settings={settings}
+          ontoggleAnimation={toggleAnimation} isAnimationActive={isAnimationActive}
+        />
+        <TreeVisualization tree={tree} search={searchQuery} activeTreeModel={activeTreeModel} proof={proof} isAnimationActive={isAnimationActive}/>
+        <TreeSettings onUpdateSettings={onUpdateSettings} treeModel={activeTreeModel}/>
       </div>
       <Footer />
     </div>

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-const BinaryTreeNode = ({ node, search }) => {
+const BinaryTreeNode = ({ node, search, isAnimationActive }) => {
   
   if(!node) return (<div className='flex items-center justify-center bg-navyBlue text-white rounded-md m-1 w-12 h-8'>Root</div>);
   let isSearchMatch = false;
@@ -16,7 +16,7 @@ const BinaryTreeNode = ({ node, search }) => {
   const hasOnlyOneChild = (node.left && !node.right) || (!node.left && node.right);
 
   return (
-    <div className="flex flex-col items-center animate-wave">
+    <div className={`flex flex-col items-center ${isAnimationActive ? "animate-wave" : ""}`}>
       <div className={boxClasses}>
         {node.data}
       </div>
@@ -40,7 +40,7 @@ const BinaryTreeNode = ({ node, search }) => {
 
 // MerkleTreeNode
 
-const MerkleTreeNode = ({ tree, search, proof }) => {
+const MerkleTreeNode = ({ tree, search, proof, isAnimationActive }) => {
   // Ensure tree.tree is accessed correctly for the layers
   if (!tree || !tree.leaves || tree.leaves.length === 0) {
     return (<div className='flex items-center justify-center bg-navyBlue text-white rounded-md m-1 w-12 h-8'>Root</div>);
@@ -59,7 +59,7 @@ const MerkleTreeNode = ({ tree, search, proof }) => {
             const isProofMatch = proof?.includes(node);
             const boxClasses = `flex justify-center items-center ${isSearchMatch || isProofMatch ? 'bg-yellow-200' : 'bg-navyBlue'} text-white rounded-md m-1 w-12 h-8`;
             return (
-                <div key={nodeIndex} className={`${boxClasses} animate-wave`}>
+              <div key={nodeIndex} className={`${boxClasses} ${isAnimationActive ? "animate-wave" : ""}`}>
                 {/* Display only the first 2 characters of each hash to keep it short */}
                 {node.substring(0, 2)}
               </div>
@@ -73,33 +73,38 @@ const MerkleTreeNode = ({ tree, search, proof }) => {
 
 // PatriciaTreeNode
 
-const PatriciaTreeNode = ({ nodes, searchPathKeys }) => {
-
+const PatriciaTreeNode = ({ nodes, searchPathKeys, isAnimationActive, depth = 0 }) => {
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-start justify-center">
       {nodes.map((node, index) => {
-        const isSearchMatch = searchPathKeys.includes(node.key); // Highlight nodes part of the search path
+        const isSearchMatch = searchPathKeys.includes(node.key);
         const boxClasses = `flex justify-center items-center ${isSearchMatch ? 'bg-yellow-200' : 'bg-navyBlue'} text-white rounded-md m-1 w-12 h-8`;
+        const nodeStyle = { marginTop: `${depth * 20}px` }; // Indent child nodes
 
         return (
-          <div key={index} className="flex flex-col items-center my-2">
-            {node.key && <div className={boxClasses}>
-              {node.key ? node.key : 'Root'}
-            </div>}
-            {Object.keys(node.children).length > 0 && (
-              <div className="flex flex-col items-center justify-center">
-                <PatriciaTreeNode nodes={Object.values(node.children)} searchPathKeys={searchPathKeys} />
+          <div key={index} className="flex flex-col items-center my-2" style={nodeStyle}>
+            {node.key && (
+              <div className={`${boxClasses} ${isAnimationActive ? "animate-wave" : ""}`}>
+                {node.key}
               </div>
+            )}
+            {Object.keys(node.children).length > 0 && (
+              <PatriciaTreeNode
+                nodes={Object.values(node.children)}
+                searchPathKeys={searchPathKeys}
+                isAnimationActive={isAnimationActive}
+                depth={depth + 1} // Increase depth for child nodes
+              />
             )}
           </div>
         );
       })}
     </div>
   );
-}; 
+};
 
 // Assuming the search feature is used to populate an array of keys that form the search value
-const PatriciaTreeComponent = ({ tree, search }) => {
+const PatriciaTreeComponent = ({ tree, search, isAnimationActive }) => {
   let searchPathKeys = [];
   const isEmptyTree = Object.keys(tree.root.children).length === 0;
 
@@ -107,23 +112,32 @@ const PatriciaTreeComponent = ({ tree, search }) => {
     const searchResults = tree.searchPath(search);
     searchPathKeys = searchResults.map(node => node.key);
   }
+
   return (
-    <div className="flex justify-center">
-      {isEmptyTree && <div className="flex justify-center items-center bg-navyBlue text-white rounded-md m-1 w-12 h-8">Root</div>}
-      <PatriciaTreeNode nodes={[tree.root]} searchPathKeys={searchPathKeys} />
+    <div className="flex items-start">
+      {isEmptyTree ? (
+        <div className="flex justify-center items-center bg-navyBlue text-white rounded-md m-1 w-12 h-8">Root</div>
+      ) : (
+        <PatriciaTreeNode
+          nodes={[tree.root]}
+          searchPathKeys={searchPathKeys}
+          isAnimationActive={isAnimationActive}
+        />
+      )}
     </div>
   );
 };
 
 // Quartier generale
 
-const TreeVisualization = ({ tree, search, activeTreeModel, proof }) => {
+const TreeVisualization = ({ tree, search, activeTreeModel, proof, isAnimationActive }) => {
+
   return (
     <div className='flex flex-col justify-center items-center'>
       <h1 className='text-center text-xl font-bold mb-8 lg:mb-16'>{activeTreeModel ? activeTreeModel.title : "Select a Tree"} </h1>
-      {(activeTreeModel?.value === "binary") && <BinaryTreeNode node={tree.root} search={search} activeTreeModel={activeTreeModel}/>}
-      {(activeTreeModel?.value === "merkle") && <MerkleTreeNode tree={tree} search={search} activeTreeModel={activeTreeModel} proof={proof}/>}
-      {(activeTreeModel?.value === "patricia") && <PatriciaTreeComponent tree={tree} search={search} activeTreeModel={activeTreeModel} proof={proof}/>}
+      {(activeTreeModel?.value === "binary") && <BinaryTreeNode node={tree.root} search={search} activeTreeModel={activeTreeModel} isAnimationActive={isAnimationActive}/>}
+      {(activeTreeModel?.value === "merkle") && <MerkleTreeNode tree={tree} search={search} activeTreeModel={activeTreeModel} proof={proof} isAnimationActive={isAnimationActive}/>}
+      {(activeTreeModel?.value === "patricia") && <PatriciaTreeComponent tree={tree} search={search} activeTreeModel={activeTreeModel} proof={proof} isAnimationActive={isAnimationActive}/>}
     </div>
   );
 };
@@ -133,12 +147,14 @@ TreeVisualization.propTypes = {
    search: PropTypes.string,
    activeTreeModel: PropTypes.object,
    proof: PropTypes.array,
+   isAnimationActive: PropTypes.bool,
 };
 
 BinaryTreeNode.propTypes = {
   node: PropTypes.object,
   search: PropTypes.string,
   activeTreeModel: PropTypes.object,
+  isAnimationActive: PropTypes.bool,
 };
 
 MerkleTreeNode.propTypes = {
@@ -146,6 +162,7 @@ MerkleTreeNode.propTypes = {
   search: PropTypes.string,
   activeTreeModel: PropTypes.object,
   proof: PropTypes.array,
+  isAnimationActive: PropTypes.bool,
 };
 
 PatriciaTreeNode.propTypes = {
@@ -153,10 +170,12 @@ PatriciaTreeNode.propTypes = {
   search: PropTypes.string,
   depth: PropTypes.number,
   searchPathKeys: PropTypes.array,
+  isAnimationActive: PropTypes.bool,
 };
 
 PatriciaTreeComponent.propTypes = {
    tree: PropTypes.object,
    search: PropTypes.string,
+   isAnimationActive: PropTypes.bool,
 };
 export default TreeVisualization;

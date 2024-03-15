@@ -57,13 +57,15 @@ class BinaryTree {
         return newBinaryTree; // Return the new binaryTree instance
     }
 
-    generateRandomTree = () => {
+    generateRandomTree = (numberOfNodes) => {
         this.root = null;
         const randomNodes = [];
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < numberOfNodes; i++) {
         const randomNumber = Math.floor(Math.random() * 100);
         if(!randomNodes.includes(randomNumber)){
             randomNodes.push(randomNumber);
+            } else {
+                i--;
             }
         }
         for (let i = 0; i < randomNodes.length; i++) {
@@ -154,8 +156,8 @@ class MerkleTree {
     }
 
     // New static method for generating a random binary tree
-    generateRandomTree(size = 10) {
-        const randomLeaves = Array.from({length: size}, () => Math.random().toString(36).substring(2, 15));
+    generateRandomTree(numberOfNodes) {
+        const randomLeaves = Array.from({length: numberOfNodes}, () => Math.random().toString(36).substring(2, 15));
         const merkleTree = new MerkleTree(randomLeaves);
         return [merkleTree, randomLeaves];
     }
@@ -204,7 +206,7 @@ class PatriciaNode {
 class PatriciaTree {
     constructor() {
         this.root = new PatriciaNode();
-        this.sharedPrefix = "";
+        this.sharedPrefix = ""; // This will store the optional prefix
     }
 
     cloneNode(node) {
@@ -216,53 +218,59 @@ class PatriciaTree {
         return new PatriciaNode(node.key, node.value, clonedChildren);
     }
 
-    clone() {
+    clone(sharedPrefix) {
         let newTree = new PatriciaTree();
         newTree.root = this.cloneNode(this.root);
+        // Ensure the sharedPrefix is also cloned
+        newTree.sharedPrefix = sharedPrefix || this.sharedPrefix;
         return newTree;
     }
 
     insert(key, value) {
+        // Adjust the key to ensure it includes the sharedPrefix if not already
+        const fullKey = key.startsWith(this.sharedPrefix) ? key : this.sharedPrefix + key;
+    
         let node = this.root;
-        let index = 0;
-
-        while (index < key.length) {
-            const char = key[index];
+        let index = 0; // Start from the beginning of the fullKey
+    
+        while (index < fullKey.length) {
+            const char = fullKey[index];
             if (!node.children[char]) {
-                // Direct path doesn't exist, create a new node.
-                node.children[char] = new PatriciaNode(key.slice(index), value);
-                return;
+                // If there's no child with this char, create a new node
+                node.children[char] = new PatriciaNode(fullKey.slice(index), value);
+                return; // End the insertion
             }
-
+    
             let child = node.children[char];
             let commonPrefixLength = 0;
-
-            // Calculate common prefix length
-            while (commonPrefixLength < child.key.length &&
-                   commonPrefixLength + index < key.length &&
-                   child.key[commonPrefixLength] === key[index + commonPrefixLength]) {
+    
+            // Calculate the length of the common prefix between the child's key and the rest of the fullKey to insert
+            while (commonPrefixLength < child.key.length && commonPrefixLength + index < fullKey.length && child.key[commonPrefixLength] === fullKey[index + commonPrefixLength]) {
                 commonPrefixLength++;
             }
-
+    
+            // If the existing node partially matches the key
             if (commonPrefixLength < child.key.length) {
-                // Split node
+                // Split the existing node
                 const splitNode = new PatriciaNode(child.key.slice(commonPrefixLength), child.value, child.children);
-                child.key = key.slice(index, index + commonPrefixLength);
-                child.value = commonPrefixLength + index === key.length ? value : null;
+                child.key = fullKey.slice(index, index + commonPrefixLength);
+                child.value = commonPrefixLength + index === fullKey.length ? value : null;
                 child.children = {};
                 child.children[splitNode.key[0]] = splitNode;
-
+    
                 if (child.value === null) {
-                    child.children[key[commonPrefixLength + index]] = new PatriciaNode(key.slice(index + commonPrefixLength), value);
+                    // If we're not at the end of the key, create a new node for the remainder
+                    child.children[fullKey[commonPrefixLength + index]] = new PatriciaNode(fullKey.slice(index + commonPrefixLength), value);
                 }
                 return;
             }
-
+    
             index += commonPrefixLength;
-            node = child;
+            node = child; // Move down the tree
         }
-
-        node.value = value; // Key fully matched an existing node, update value
+    
+        // If we've found a node matching the fullKey, update its value
+        node.value = value;
     }
 
 
@@ -297,31 +305,23 @@ class PatriciaTree {
         });
     }
 
-    generateRandomTree(tree, numEntries = 10) {
-        // Generate random keys and insert them into the tree
-        this.root = new PatriciaNode();
+    generateRandomTree(numberOfNodes, prefixInput) {
+        this.sharedPrefix = prefixInput; // Set the sharedPrefix based on prefixInput argument
+        this.root = new PatriciaNode(); // Reset the tree
         let generatedKeys = [];
-        for (let i = 0; i < numEntries; i++) {
+        for (let i = 0; i < numberOfNodes; i++) {
             const randomKey = this.generateRandomKey();
-            this.insert(randomKey, i); // Using the loop index as the value
+            this.insert(randomKey, i);
             generatedKeys.push(randomKey);
         }
-        return [this, generatedKeys]; // Return the tree and the generated keys
+        return [this, generatedKeys];
     }
 
     generateRandomKey(length = 5) {
-        // Ensure sharedPrefix is properly checked and used here
-        if (this.sharedPrefix.length < this.prefixLength) {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            while (this.sharedPrefix.length < this.prefixLength) {
-                const randomIndex = Math.floor(Math.random() * characters.length);
-                this.sharedPrefix += characters.charAt(randomIndex);
-            }
-        }
-
+        // Ensure sharedPrefix is properly utilized
         let result = this.sharedPrefix; // Start with the shared prefix
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = this.sharedPrefix.length; i < length; i++) {
+        for (let i = result.length; i < length; i++) {
             result += characters.charAt(Math.floor(Math.random() * characters.length));
         }
         return result;

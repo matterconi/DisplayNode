@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes, activeTreeModel, onSearch }) => {
+const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes, activeTreeModel, onSearch, ontoggleAnimation, isAnimationActive }) => {
   const [inputValue, setInputValue] = useState('');
+
+  useEffect(() => {
+    setInputValue('');
+  }, [activeTreeModel]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -38,6 +42,15 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes,
     }
   };
 
+  const resetInputAndExecute = (callback = null) => () => {
+    setInputValue(''); // Reset the input field
+    if (callback) {
+        callback(inputValue); // Pass inputValue if the callback requires it
+    }
+  };
+
+
+
   return (
     <div className="px-8 my-8 lg:my-16">
       <div className='flex flex-col lg:flex-row justify-around items-center w-full my-8 lg:my-16'>
@@ -61,7 +74,7 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes,
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col space-y-2 items-center mb-16">
+      <form onSubmit={handleSubmit} className="flex flex-col space-y-2 items-center">
         <input
           type="text"
           value={inputValue}
@@ -70,7 +83,7 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes,
           className="custom-input mb-8 lg:mb-16 w-full"
         />
 
-        <div className="flex justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-4 mt-32">
           <button
             type="submit"
             className="bg-navyBlue text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
@@ -79,33 +92,38 @@ const TreeInputForm = ({ onAddNodes, onRandom, onClearNodes, onGetProof,  nodes,
           </button>
           <button
             type="button"
-            onClick={onRandom}
+            onClick={resetInputAndExecute(onRandom)}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300"
           >
             Generate Random Tree
           </button>
-          {/* Clear All Nodes Button */}
           <button
             type="button"
-            onClick={onClearNodes} // Assuming onClearNodes is a function passed as a prop
+            onClick={resetInputAndExecute(onClearNodes)}
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 transition duration-300"
           >
             Clear All Nodes
           </button>
-
-          <button
+          {activeTreeModel.value === 'merkle' && <button
             type="button"
-            onClick={() => onGetProof(inputValue)} // Trigger onGetProof with the current input value
+            onClick={resetInputAndExecute(() => onGetProof(inputValue))}
             className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300"
           >
             Get Proof
+          </button>}
+          <button
+            type="button"
+            onClick={resetInputAndExecute(() => onSearch(inputValue))}
+            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-700 transition duration-300"
+          >
+            Search
           </button>
           <button
             type="button"
-            onClick={() => onSearch(inputValue)} // Trigger onGetProof with the current input value
-            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300"
+            onClick={ontoggleAnimation}
+            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition duration-300"
           >
-            Search
+            {isAnimationActive ? 'Stop Animation' : 'Start Animation'}
           </button>
         </div>
       </form>
@@ -124,6 +142,8 @@ TreeInputForm.propTypes = {
   ]),
   onGetProof: PropTypes.func.isRequired,
   onSearch: PropTypes.func.isRequired,
+  ontoggleAnimation: PropTypes.func.isRequired,
+  isAnimationActive: PropTypes.bool.isRequired,
 };
 
 export default TreeInputForm;
